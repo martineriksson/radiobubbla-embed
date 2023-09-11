@@ -1,17 +1,22 @@
 # frozen_string_literal: true
 
+# name: radiobubbla-embed
+# about: TODO
+# version: 0.0.1
+# authors: bubb.la
+# url: https://radio.bubb.la
+# required_version: 2.7.0
+
 require 'net/http'
 require 'uri'
 
-plugin = PluginMetadata.new
-plugin.name = 'radio bubb.la embed'
-plugin.version = '0.1'
-plugin.author = 'Martin Eriksson'
-plugin.url = 'https://radio.bubb.la'
-
-register_asset 'stylesheets/common/radiobubbla_embed.scss'
+#register_asset 'stylesheets/common/radiobubbla_embed.scss'
 
 enabled_site_setting :radiobubbla_embed_enabled
+
+module ::RadioBubblaEmbedOnebox
+  PLUGIN_NAME = "radiobubbla-embed"
+end
 
 after_initialize do
   module ::Onebox
@@ -48,3 +53,4 @@ after_initialize do
     end
   end
 end
+
