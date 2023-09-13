@@ -10,7 +10,7 @@
 require 'net/http'
 require 'uri'
 
-#register_asset 'stylesheets/common/radiobubbla_embed.scss'
+#load File.expand_path('config/settings.yml', __dir__)
 
 enabled_site_setting :radiobubbla_embed_enabled
 

@@ -1,0 +1,4 @@
+plugins:
+  radiobubbla_embed_enabled:
+    default: true
+    client: true
