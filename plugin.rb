@@ -10,8 +10,6 @@
 require 'net/http'
 require 'uri'
 
-#load File.expand_path('config/settings.yml', __dir__)
-
 enabled_site_setting :radiobubbla_embed_enabled
 
 module ::RadioBubblaEmbedOnebox
@@ -29,11 +27,17 @@ after_initialize do
 
         def to_html
           uri = URI.parse(@url)
-          params = CGI.parse(uri.query)
-          id = params['id'].first
-          type = params['type'].first
+
+          segments = uri.path.split('/').reject(&:empty?)
+          time = segments.length == 3 ? segments[-1] : nil
+          id = segments.length == 3 ? segments[-2] : segments[-1]
+          type = segments.length == 3 ? segments[-3] : segments[-2]
+
           secure_token = generate_secure_token(id, type)
-          fetch_html(id, type, secure_token)
+
+          fetched_json = fetch_html(id, type, secure_token)
+          fetched_data = ::JSON.parse(fetched_json)
+          fetched_data["html"]
         end
 
         private
@@ -45,7 +49,9 @@ after_initialize do
         end
 
         def fetch_html(id, type, token)
-          uri = URI.parse("https://radio.bubb.la/oembed/#{type}/#{id}?token=#{token}")
+          original_uri = URI.parse(@url)
+          domain = "#{original_uri.scheme}://#{original_uri.host}"
+          uri = URI.parse("#{domain}/oembed/#{type}/#{id}?token=#{token}")
           res = Net::HTTP.get_response(uri)
           res.body if res.is_a?(Net::HTTPSuccess)
         end
@@ -53,4 +59,3 @@ after_initialize do
     end
   end
 end
-
