@@ -26,16 +26,16 @@ after_initialize do
         matches_regexp(/^https?:\/\/(rails\.)?radio\.bubb\.la\/.+/)
 
         def to_html
-          uri = URI.parse(@url)
+          oembed_url = fetch_oembed_url
+          uri = URI.parse(oembed_url)
 
           segments = uri.path.split('/').reject(&:empty?)
-          time = segments.length == 3 ? segments[-1] : nil
-          id = segments.length == 3 ? segments[-2] : segments[-1]
-          type = segments.length == 3 ? segments[-3] : segments[-2]
+          id = segments.length == 4 ? segments[-2] : segments[-1]
+          type = segments.length == 4 ? segments[-3] : segments[-2]
 
           secure_token = generate_secure_token(id, type)
 
-          fetched_json = fetch_html(id, type, secure_token)
+          fetched_json = fetch_html(oembed_url, secure_token)
           fetched_data = ::JSON.parse(fetched_json)
           fetched_data["html"]
         end
@@ -48,10 +48,17 @@ after_initialize do
           OpenSSL::HMAC.hexdigest('SHA256', secret_key, data)
         end
 
-        def fetch_html(id, type, token)
-          original_uri = URI.parse(@url)
-          domain = "#{original_uri.scheme}://#{original_uri.host}"
-          uri = URI.parse("#{domain}/oembed/#{type}/#{id}?token=#{token}")
+        def fetch_oembed_url
+          uri = URI(@url)
+          response = Net::HTTP.get_response(uri)
+          doc = Nokogiri::HTML(response.body)
+          meta_tag = doc.css("link[type='application/json+oembed']")
+          oembed_url = meta_tag.first['href']
+          oembed_url
+        end
+
+        def fetch_html(oembed_url, token)
+          uri = URI.parse("#{oembed_url}?token=#{token}")
           res = Net::HTTP.get_response(uri)
           res.body if res.is_a?(Net::HTTPSuccess)
         end
